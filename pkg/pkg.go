@@ -1,3 +1,4 @@
+// Package pkg provides a pkg-config(1) like interface for parsing and fetching info from .pc files.
 package pkg
 
 import (
