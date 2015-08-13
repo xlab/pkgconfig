@@ -19,12 +19,20 @@ type config struct {
 }
 
 type Config interface {
+	// Locate returns the path of a pkg-config file for the specified pkg name,
+	// search goes across all paths defined in PKG_CONFIG_PATH env variable.
 	Locate(pkgName string) (pcPath string, err error)
+	// Load tries to open and parse a .pc file located at given path, following
+	// all the required packages recursively if the follow option is set.
 	Load(pcPath string, follow bool) error
+	// LoadedPkgNames returns a sorted list of all packages being processed (via required too).
 	LoadedPkgNames() []string
+	// CFlags returns a list of CFlags collected from all the loaded .pc files.
 	CFlags() []string
 }
 
+// NewConfig creates a new pkg-config lookup helper, you may specify lookup paths explicitly,
+// otherwise the helper will try to get them from PKG_CONFIG_PATH.
 func NewConfig(pcPaths []string) (Config, error) {
 	cfg := &config{
 		seenMap: make(map[string]bool),
@@ -46,8 +54,6 @@ func NewConfig(pcPaths []string) (Config, error) {
 	return Config(cfg), nil
 }
 
-// Locate returns the path of a pkg-config file for the specified pkg name,
-// search goes across all paths defined in PKG_CONFIG_PATH env variable.
 func (c config) Locate(pkgName string) (string, error) {
 	pcName := fmt.Sprintf("%s.pc", pkgName)
 	for _, pcPath := range c.pcPaths {
