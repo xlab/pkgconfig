@@ -90,6 +90,24 @@ func (c config) CFlags() []string {
 	return c.cflags
 }
 
+const (
+	RequireVersionGT   = ">"
+	RequireVersionLT   = "<"
+	RequireVersionGTEQ = ">="
+	RequireVersionLTEQ = "<="
+	RequireVersionEQ   = "="
+	RequireVersionEQ2  = "=="
+)
+
+var reqCheckOps = map[string]struct{}{
+	RequireVersionGT:   {},
+	RequireVersionLT:   {},
+	RequireVersionGTEQ: {},
+	RequireVersionLTEQ: {},
+	RequireVersionEQ:   {},
+	RequireVersionEQ2:  {},
+}
+
 func (c *config) readCflags(pcPath string, follow bool) ([]string, error) {
 	if c.seenMap[pcPath] {
 		return nil, nil
@@ -104,7 +122,15 @@ func (c *config) readCflags(pcPath string, follow bool) ([]string, error) {
 	cflags := readArgs(data, expandMap, "Cflags:")
 	if follow {
 		requires := readArgs(data, expandMap, "Requires:")
+		var skipArg bool
 		for _, pkgName := range requires {
+			if _, isOp := reqCheckOps[pkgName]; isOp {
+				skipArg = true
+				continue
+			} else if skipArg {
+				skipArg = false
+				continue
+			}
 			pcPath, err := c.Locate(pkgName)
 			if err != nil {
 				return nil, fmt.Errorf("required %s.pc error: %s", pkgName, err.Error())
