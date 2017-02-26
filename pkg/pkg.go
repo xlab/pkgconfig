@@ -42,6 +42,9 @@ func NewConfig(pcPaths []string) (Config, error) {
 		cfg.pcPaths = pcPaths
 	} else {
 		pkgConfigPath := os.Getenv("PKG_CONFIG_PATH")
+		if pkgConfigPath == "" {
+			pkgConfigPath = getSystemPath()
+		}
 		for _, path := range strings.Split(pkgConfigPath, ":") {
 			path = strings.TrimSpace(path)
 			if len(path) > 0 {
